@@ -53,16 +53,22 @@ class Segment(Element):
         Constructeur de la classe Segment.
        
         Paramètres:
-          - _p1 : indice du premier sommet du segment (entier)
-          - _p2 : indice du second sommet du segment (entier)
+          - _sommets : indices globaux des sommets composant le segment (tuple d'entiers)
+          
         """
         
         Element.__init__(self, ident, physical)
-        self._p1 = p1
-        self._p2 = p2
+        self._sommets = (p1, p2)
+        
+    def getSommet(self, i):
+        '''
+        Retourne l'indice du i-ème sommet du segment
+        '''
+        return self._sommets[i-1]
 
+    
     def __str__(self):
-        return "Element {0} : ({1}, {2})".format(self._id, self._p1, self._p2)
+        return "Element {0} : ({1}, {2})".format(self._id, self.getSommet(1), self.getSommet(2))
 
 class Node:
     """
@@ -105,8 +111,6 @@ class Maillage:
           - _FileName : nom du fichier à partir duquel on va charger le maillage (string)
           - _Ns       : nombre de sommets dans le maillage (entier)
           - _Ne       : nombre d'éléments dans le maillage (entier)
-          - _Nt       : nombre de triangles dans le maillage (entier)
-          - _Nseg     : nombre de segments dans le maillage (entier)
           - _Nodes    : ensemble des noeuds du maillage (liste de Node)
           - _Elems    : ensemble des éléments du maillage (liste d'Element)        
 
@@ -114,7 +118,7 @@ class Maillage:
         
         self._FileName = FileName
         self._Ns, self._Nodes = self.Nodes()
-        self._Ne, self._Nt, self._Nseg, self._Elems = self.Elems()
+        self._Ne, self._Elems = self.Elems()
         
     def Nodes(self):        
         mesh = open(self._FileName, "r")
@@ -146,8 +150,6 @@ class Maillage:
         line = mesh.readline()
         Ne = int(line)
 
-        Nt = 0
-        Nseg = 0
         Elements = []
         for e in range(Ne):
             line = mesh.readline()
@@ -161,17 +163,15 @@ class Maillage:
             if typeElem == 2:  #triangle
                 s1, s2, s3 = int(line[3+Ntags]), int(line[4+Ntags]), int(line[5+Ntags])
                 element = Triangle(ident, physical, s1, s2, s3)
-                Nt = Nt + 1
                 
             elif typeElem == 1: #segment
                 p1, p2 = int(line[3+Ntags]), int(line[4+Ntags])
                 element = Segment(ident, physical, p1, p2)
-                Nseg = Nseg + 1
 
             Elements.append(element)
                 
         mesh.close()
-        return (Ne, Nt, Nseg, Elements)
+        return (Ne, Elements)
 
 
     def getElement(self, i):
@@ -187,22 +187,22 @@ class Maillage:
         return self._Nodes[i-1]
 
 
-    def getCoord(self, p, i):
+    def getCoord(self, e, i):
         '''
         Données d'entrée: 
-          - p        : indice du triangle (entier)
-          - i        : indice local du sommet dans le triangle p (entier)
+          - e        : indice de l'élément (triangle ou sommet) en question (entier)
+          - i        : indice local du sommet dans l'élément e (entier)
         Données de sortie: 
-          - (x,y,z)  : coordonnées du i-ème sommet du triangle p (tuple de float)
+          - (x,y,z)  : coordonnées du i-ème sommet de l'élément e (tuple de float)
         
-        Retourne les coordonnées du i-ème sommet du triangle p    
+        Retourne les coordonnées du i-ème sommet de l'élément e (triangle, ou segment)
         '''
         
-        # récupérer le triangle p
-        tri = self.getElement(p)
+        # récupérer l'élément e
+        elem = self.getElement(e)
 
-        # récupérer l'indice global du sommet i dans le triangle p
-        s_ind = tri.getSommet(i)
+        # récupérer l'indice global du sommet i dans l'élément e
+        s_ind = elem.getSommet(i)
 
         # récupérer le sommet i du triangle p
         s = self.getNode(s_ind)
@@ -211,25 +211,25 @@ class Maillage:
         return s.getCoord()      
         
         
-    def Loc2Glob(self, p, i):
+    def Loc2Glob(self, e, i):
         '''
         Données d'entrée: 
-          - p : indice du triangle (entier)
-          - i : indice local du sommet dans le triangle p (entier)
+          - e : indice de l'élément (entier)
+          - i : indice local du sommet dans l'élément e (entier)
         Données de sortie: 
-          - I : indice global du i-ème sommet du triangle p (entier)
+          - I : indice global du i-ème sommet de l'élément e (entier)
         
-        Retourne l'indice I global du sommet i dans le triangle p    
+        Retourne l'indice I global du sommet i de l'élément e    
         '''
-        tri = self.getElement(p)
-        I = tri.getSommet(i)
+        elem = self.getElement(e)
+        I = elem.getSommet(i)
         return I
 
 
     def triArea(self, p):
         '''
         Données d'entrée: 
-          - p : indice du triangle (entier)
+          - p    : indice du triangle (entier)
         Données de sortie: 
           - area : aire du triangle p (float)
         
@@ -241,7 +241,27 @@ class Maillage:
         (x2, y2, z2) = self.getCoord(p, 2)
         (x3, y3, z3) = self.getCoord(p, 3)
 
-        return 0.5 * abs((x2 - x1)*(y3 - y1) - (x3 - x1)*(y2 - y1))
+        area = 0.5 * abs((x2 - x1)*(y3 - y1) - (x3 - x1)*(y2 - y1))
+        return area
+
+
+    def segLength(self, s):
+        '''
+        Données d'entrée: 
+          - s      : indice du segment (entier)
+        Données de sortie: 
+          - length : longueur du segment s (float)
+        
+        Retourne la longueur du segment d'indice s    
+        '''
+        
+        # récupérer les coordonnées des sommets du segment s
+        (x1, y1, z1) = self.getCoord(s, 1)
+        (x2, y2, z2) = self.getCoord(s, 2)
+
+        length = np.sqrt( (x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2  ) 
+        return length
+
     
     def __str__(self):
         
