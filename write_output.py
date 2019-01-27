@@ -8,6 +8,10 @@ from matrice_construction import *
 
 def write_output(sol, msh):
     '''
+    Donnée d'entrée: 
+     - sol  : solution du problème (array)
+     - msh  : maillage du problème (Maillage)
+
     Écrit un fichier temporaire d'extension .tri 
     Ce fichier va être transcrit en un fichier .vtu grâce au langage vtk pour visualiser la solution sur paraview   
     '''
@@ -40,7 +44,7 @@ msh = Maillage(input_filename)
 M = matrice_masse(msh)
 D = matrice_rigidite(msh)
 Mb = matrice_masse_bord(msh)
-A = M + D + Mb
+A = (k**2)*M - D -(1j*k)*Mb
 
 # construction du membre de droite
 B = membre_droite(msh)

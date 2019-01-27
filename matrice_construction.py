@@ -15,19 +15,36 @@ Phi_3     = lambda ksi, eta: eta
 
 def f(x,y):
     '''
+    Données d'entrée: 
+      - x      : abcisse du point  (float)
+      - y      : ordonnée du point (float)
+    Donnée de sortie:
+      - f(x,y) : valeur de f en (x,y) (float)
+
     Définit la fonction f qui représente le terme source du problème
     '''
     return 0
 
 def uinc(x,y):
     '''
-    Définit la fonction uinc
+    Données d'entrée: 
+      - x      : abcisse du point  (float)
+      - y      : ordonnée du point (float)
+    Donnée de sortie:
+      - uinc(x,y) : valeur de uinc en (x,y) (float)
+
+    Définit la fonction uinc du problème
     '''
     return np.exp( 1j*k * (x*np.cos(alpha) + y*np.sin(alpha)) )
 
 def matrice_masse(msh):
     '''
-    Calcule la matrice de masse du problème
+    Donnée d'entrée: 
+      - msh    : maillage du problème (Maillage)
+    Donnée de sortie:
+      - Masse  : matrice de masse du problème (matrice au format csr)
+
+    Calcule la matrice de masse du problème et la stocke sous format csr
     '''
 
     tmp_dict = dict()   #contient les éléments non nuls de la matrice
@@ -87,7 +104,12 @@ def matrice_masse(msh):
 
 def matrice_rigidite(msh):
     '''
-    Calcule la matrice de rigidité du problème
+    Donnée d'entrée: 
+      - msh       : maillage du problème (Maillage)
+    Donnée de sortie:
+      - Rigidite  : matrice de rigidité du problème (matrice au format csr)
+
+    Calcule la matrice de rigidité du problème et la stocke sous format csr
     '''
     
     # gradient des fonctions de forme dans le triangle de référence
@@ -152,7 +174,12 @@ def matrice_rigidite(msh):
 
 def matrice_masse_bord(msh):
     '''
-    Calcule la matrice de masse au bord du problème
+    Donnée d'entrée: 
+      - msh         : maillage du problème (Maillage)
+    Donnée de sortie:
+      - Masse_bord  : matrice de masse au bord du problème (matrice au format csr)
+
+    Calcule la matrice de masse au bord du problème et la stocke sous format csr
     '''
     
     tmp_dict = dict()   #contient les éléments non nuls de la matrice
@@ -209,6 +236,11 @@ def matrice_masse_bord(msh):
     
 def membre_droite(msh):
     '''
+    Donnée d'entrée: 
+      - msh    : maillage du problème (Maillage)
+    Donnée de sortie:
+      - B      : membre de droite du problème (array)
+
     Renvoie le vecteur du membre de droite du problème
     '''
 
@@ -256,6 +288,11 @@ def membre_droite(msh):
 
 def cond_Dirichlet(A,B, msh):
     '''
+    Donnée d'entrée: 
+      - A    : matrice creuse du problème (matrice au format csr)
+      - B    : membre de droite du problème (array)
+      - msh  : maillage du problème (Maillage)
+    
     Applique les conditions de Dirichlet au système
     '''
 
@@ -287,4 +324,3 @@ def cond_Dirichlet(A,B, msh):
 
     
     A.eliminate_zeros()
-    return A,B
