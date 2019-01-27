@@ -1,74 +1,37 @@
 # -*- coding: utf-8 -*-
+import numpy as np
 
 class Element:
     """
     Classe qui représente un élément du maillage.
     """
-    def __init__(self, ident, physical):
+    def __init__(self, ident, physical, typeElem, sommets):
         """
         Constructeur de la classe Element.
         
         Paramètres: 
           - _id        : indice de l'élément (entier)
           - _physical  : indice physical de l'élément (entier)
+          - _type      : indique si l'élément est un triangle ou un segment (entier)
+          - _sommets   : indices globaux des sommets composant l'élément (tuple d'entiers)
         """
 
         self._id = ident
         self._physical = physical
-
-
-class Triangle(Element):
-    """
-    Classe définissant un triangle.
-    Elle hérite de la classe Element.
-    """
-    def __init__(self, ident, physical, s1, s2, s3):
-        """
-        Constructeur de la classe Triangle.
-
-        Paramètres:
-          - _sommets : indices globaux des sommets composant le triangle (tuple d'entiers)
-        """
+        self._type = typeElem
+        self._sommets = sommets
         
-        Element.__init__(self, ident, physical)
-        self._sommets = (s1,s2,s3)
 
     def getSommet(self, i):
         '''
-        Retourne l'indice du i-ème sommet du triangle
-        '''
-        return self._sommets[i-1]
-        
-    def __str__(self):
-        return "Element {0} : ({1}, {2}, {3})".format(self._id, self.getSommet(1), self.getSommet(2), self.getSommet(3))
-    
-
-class Segment(Element):
-    """
-    Classe définissant un segment.
-    Elle hérite de la classe Element.
-    """
-    def __init__(self, ident, physical, p1, p2):
-        """
-        Constructeur de la classe Segment.
-       
-        Paramètres:
-          - _sommets : indices globaux des sommets composant le segment (tuple d'entiers)
-          
-        """
-        
-        Element.__init__(self, ident, physical)
-        self._sommets = (p1, p2)
-        
-    def getSommet(self, i):
-        '''
-        Retourne l'indice du i-ème sommet du segment
+        Retourne l'indice du i-ème sommet de l'élément
         '''
         return self._sommets[i-1]
 
-    
     def __str__(self):
-        return "Element {0} : ({1}, {2})".format(self._id, self.getSommet(1), self.getSommet(2))
+        sommets = ' '.join(str(s) for s in self._sommets)
+        return "Element {0} : ({1})".format(self._id, sommets)   
+
 
 class Node:
     """
@@ -111,6 +74,8 @@ class Maillage:
           - _FileName : nom du fichier à partir duquel on va charger le maillage (string)
           - _Ns       : nombre de sommets dans le maillage (entier)
           - _Ne       : nombre d'éléments dans le maillage (entier)
+          - _Nt       : nombre de triangles dans le maillage (entier)
+          - _Nseg     : nombre de segments dans le maillage (entier)
           - _Nodes    : ensemble des noeuds du maillage (liste de Node)
           - _Elems    : ensemble des éléments du maillage (liste d'Element)        
 
@@ -118,7 +83,7 @@ class Maillage:
         
         self._FileName = FileName
         self._Ns, self._Nodes = self.Nodes()
-        self._Ne, self._Elems = self.Elems()
+        self._Ne, self._Nt, self._Nseg, self._Elems = self.Elems()
         
     def Nodes(self):        
         mesh = open(self._FileName, "r")
@@ -150,6 +115,8 @@ class Maillage:
         line = mesh.readline()
         Ne = int(line)
 
+        Nt = 0
+        Nseg = 0
         Elements = []
         for e in range(Ne):
             line = mesh.readline()
@@ -158,20 +125,21 @@ class Maillage:
             ident = int(line[0])
             Ntags = int(line[2])
             physical = int(line[3])
-            
             typeElem = int(line[1])
+            
             if typeElem == 2:  #triangle
-                s1, s2, s3 = int(line[3+Ntags]), int(line[4+Ntags]), int(line[5+Ntags])
-                element = Triangle(ident, physical, s1, s2, s3)
+                sommets = int(line[3+Ntags]), int(line[4+Ntags]), int(line[5+Ntags])
+                Nt+=1
                 
             elif typeElem == 1: #segment
-                p1, p2 = int(line[3+Ntags]), int(line[4+Ntags])
-                element = Segment(ident, physical, p1, p2)
+                sommets = int(line[3+Ntags]), int(line[4+Ntags])
+                Nseg+=1
 
+            element = Element(ident, physical, typeElem, sommets)
             Elements.append(element)
                 
         mesh.close()
-        return (Ne, Elements)
+        return (Ne, Nt, Nseg, Elements)
 
 
     def getElement(self, i):
