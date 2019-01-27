@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from scipy.sparse import csr_matrix
-from scipy.sparse.linalg import spsolve
-import sys
 from matrice_construction import *
-
 
 def write_output(sol, msh):
     '''
@@ -12,8 +8,75 @@ def write_output(sol, msh):
      - sol  : solution du problème (array)
      - msh  : maillage du problème (Maillage)
 
+    Écrit un fichier d'extension .vtu pour visualiser la solution sur paraview   
+    '''
+    output  = open("output.vtu", "w")
+
+    output.write("<VTKFile type=\"UnstructuredGrid\" version=\"1.0\" byte_order=\"LittleEndian\" header_type=\"UInt64\">\n")
+    output.write("<UnstructuredGrid>\n")
+    output.write("<Piece NumberOfPoints=\"{0}\" NumberOfCells=\"{1}\">\n".format(msh._Ns,msh._Nt))
+    output.write("<Points>\n")
+    output.write("<DataArray NumberOfComponents=\"3\" type=\"Float64\">\n")
+
+    #on écrit les coordonnées de chaque point
+    for n in msh._Nodes:
+        x = n.getCoord()[0]
+        y = n.getCoord()[1]
+        z = n.getCoord()[2]
+        output.write("{0} {1} {2}\n".format(x,y,z))
+
+    output.write("</DataArray>\n</Points>\n<Cells>\n")
+    output.write("<DataArray type=\"Int32\" Name=\"connectivity\" format=\"ascii\">\n")
+
+    #on écrit les indices des sommets composant les triangles
+    for e in msh._Elems:
+        if e._type == 2:  #l'élément est un triangle
+            output.write("{0} {1} {2}\n".format(e.getSommet(1)-1, e.getSommet(2)-1, e.getSommet(3)-1))
+            
+
+    output.write("</DataArray>\n")
+    output.write("<DataArray type=\"UInt8\" Name=\"offsets\" format=\"ascii\">\n")
+
+    for e in range(msh._Nt):
+        output.write("{0}\n".format(3*(e+1)))
+
+    output.write("</DataArray>\n")
+    output.write("<DataArray type=\"UInt8\" Name=\"types\" format=\"ascii\">\n")
+
+    for e in range(msh._Nt):
+        output.write("5\n")
+
+    output.write("</DataArray>\n")
+    output.write("</Cells>\n")
+
+    output.write("<PointData Scalars=\"solution\">\n")
+    output.write("<DataArray type=\"Float64\" Name=\"Real part\" format=\"ascii\">\n")
+
+    for i in range(msh._Ns):
+        output.write("{0}\n".format(sol[i].real))
+
+    output.write("</DataArray>\n")
+    output.write("<DataArray type=\"Float64\" Name=\"Imag part\" format=\"ascii\">\n")
+    
+    for i in range(msh._Ns):
+        output.write("{0}\n".format(sol[i].imag))  
+
+    output.write("</DataArray>\n</PointData>\n</Piece>\n</UnstructuredGrid>\n</VTKFile>\n")
+
+    output.close() 
+
+
+
+
+def write_outputVTK(sol, msh):
+    '''
+    Donnée d'entrée: 
+     - sol  : solution du problème (array)
+     - msh  : maillage du problème (Maillage)
+
     Écrit un fichier temporaire d'extension .tri 
-    Ce fichier va être transcrit en un fichier .vtu grâce au langage vtk pour visualiser la solution sur paraview   
+    Ce fichier va être transcrit en un fichier .vtu dans un format différent que dans la fonction write_output par le fichier Importer.cpp, grâce au langage vtk
+    Cette méthode permet de visualiser des solutions même avec un maillage fin !
     '''
     output  = open("output.tri", "w")
 
@@ -34,26 +97,3 @@ def write_output(sol, msh):
             output.write("{0} {1} {2}\n".format(e.getSommet(1)-1, e.getSommet(2)-1, e.getSommet(3)-1))
 
     output.close() 
-
-
-# importer le maillage
-input_filename = sys.argv[1]
-msh = Maillage(input_filename)
-
-# construction des matrices
-M = matrice_masse(msh)
-D = matrice_rigidite(msh)
-Mb = matrice_masse_bord(msh)
-A = (k**2)*M - D -(1j*k)*Mb
-
-# construction du membre de droite
-B = membre_droite(msh)
-
-#application des conditions de Dirichlet
-cond_Dirichlet(A,B, msh)
-
-# résolution du système
-x = spsolve(A, B)
-
-# écriture de la solution dans un fichier
-write_output(x, msh)
