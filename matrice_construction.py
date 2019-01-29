@@ -9,7 +9,7 @@ from read_file import *
 
 
 # définition des paramètres physiques
-k = 2*np.pi
+k = 6*np.pi
 
 # définition des fonctions de forme
 Phi_1     = lambda ksi, eta: 1 - ksi - eta
@@ -27,7 +27,7 @@ def f(x,y):
 
     Définit la fonction f qui représente le terme source du problème
     '''
-    return uinc(x,y)
+    return 0
 
 def uinc(x,y):
     '''
@@ -295,11 +295,11 @@ def cond_Dirichlet(A,B, msh):
 
             # récupérer les coordonnées du 1er point:
             (x1, y1, z1) = msh.getCoord(s, 1)
-            B[p1_ind-1] = 0
+            B[p1_ind-1] = uinc(x1,y1)
             
             # récupérer les coordonnées du 2eme point:
             (x2, y2, z2) = msh.getCoord(s, 2)
-            B[p2_ind-1] = 0
+            B[p2_ind-1] = uinc(x2,y2)
             
             A[p1_ind-1, :] = 0.0
             A[:, p1_ind-1] = 0.0
