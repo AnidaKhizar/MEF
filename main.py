@@ -3,6 +3,12 @@ import sys
 from scipy.sparse.linalg import spsolve
 from write_output import *
 
+##########################################################################
+# MAIN:
+# résoud le problème
+# génère les fichiers nécessaires à la visualisation de la solution
+##########################################################################
+
 # importer le maillage
 input_filename = sys.argv[1]
 msh = Maillage(input_filename)
@@ -14,7 +20,7 @@ Mb = matrice_masse_bord(msh)
 A = (k**2)*M - D -(1j*k)*Mb
 
 # construction du membre de droite
-B = membre_droite(msh)
+B = k**2*membre_droite(msh)
 
 #application des conditions de Dirichlet
 cond_Dirichlet(A,B, msh)

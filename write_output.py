@@ -2,6 +2,12 @@
 import numpy as np
 from matrice_construction import *
 
+
+##########################################################################
+# ECRIT LES FICHIERS PERMETTANT DE VISUALISER LA SOLUTION SUR PARAVIEW
+##########################################################################
+
+
 def write_output(sol, msh):
     '''
     Donnée d'entrée: 

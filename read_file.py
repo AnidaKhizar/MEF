@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 
+########################################################
+# FICHIER CONTENANT LES CLASSES DÉFINISSANT UN MAILLAGE
+########################################################
+
+
 class Element:
     """
     Classe qui représente un élément du maillage.

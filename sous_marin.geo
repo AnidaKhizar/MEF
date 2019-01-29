@@ -1,5 +1,6 @@
 Mesh.MshFileVersion = 2.2;
-h = 1;
+k = 2*Pi;
+h = (2*Pi)/(k*15);
 R1 = 1.2;
 R2 = 0.6;
 
@@ -70,10 +71,11 @@ Line(20) = {18,14};
 Spline(21) = {15,14};   //pas dans le bord
 Spline(22) = {14,11};
 
-Line Loop(1) = {1,2,3,4};
-Line Loop(2) = {5,6,7,8,9,10,11,12,13,14,16,17,18,19,20,22};
+Line Loop(1) = {1,2,3,4};   // ocean
+Line Loop(2) = {5,6,7,8,9,10,11,12,13,14,16,17,18,19,20,22};  //sous-marin
 
 
 Plane Surface(1) = {1,2};     //Définition d'une surface
 Physical Surface(1) = {1};  //A sauvegarder dans le fichier de maillage
 Physical Line(2) = {1,2,3,4};
+Physical Line(3) = {5,6,7,8,9,10,11,12,13,14,16,17,18,19,20,22};
